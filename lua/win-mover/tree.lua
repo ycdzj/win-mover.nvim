@@ -78,14 +78,14 @@ function M.search_win(root, win_id)
 end
 
 function M.reverse_diagonal(root)
-  root.prop.vertical = not root.prop.vertical
+  root.prop.row = not root.prop.row
   for _, child in ipairs(root.children) do
     M.reverse_diagonal(child)
   end
 end
 
 function M.reverse_horizontal(root)
-  if root.prop.vertical then
+  if root.prop.row then
     root:reverse_children()
   end
   for _, child in ipairs(root.children) do
@@ -110,10 +110,10 @@ end
 
 function M.build_from_layout(layout)
   if layout[1] == 'leaf' then
-    return M.Node:new({ vertical = false, win_id = layout[2] })
+    return M.Node:new({ row = false, win_id = layout[2] })
   end
 
-  local root = M.Node:new({ vertical = layout[1] == 'row' })
+  local root = M.Node:new({ row = layout[1] == 'row' })
   for _, sub_layout in ipairs(layout[2]) do
     root:add_child(M.build_from_layout(sub_layout))
   end

@@ -9,7 +9,7 @@ local function sanitize(root)
   for _, child in ipairs(children) do
     child = sanitize(child)
     if child then
-      if #child.children > 0 and child.prop.vertical == root.prop.vertical then
+      if #child.children > 0 and child.prop.row == root.prop.row then
         root:add_children(child.children)
       else
         root:add_child(child)
@@ -46,7 +46,7 @@ end
 
 local function apply(original, updated)
   if original then
-    if original.prop.vertical ~= updated.prop.vertical then
+    if original.prop.row ~= updated.prop.row then
       apply(nil, updated)
       return
     end
@@ -67,7 +67,7 @@ local function apply(original, updated)
   for _, child in ipairs(updated.children) do
     if child.prop.win_id ~= updated.prop.win_id then
       vim.fn.win_splitmove(child.prop.win_id, updated.prop.win_id, {
-        vertical = updated.prop.vertical,
+        vertical = updated.prop.row,
       })
     end
     apply(nil, child)

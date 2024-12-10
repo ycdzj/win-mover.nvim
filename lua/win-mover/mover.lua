@@ -10,10 +10,10 @@ M.updater = {
     end
 
     local prev = node:prev()
-    if parent.prop.vertical and prev then
+    if parent.prop.row and prev then
       if #parent.children > 2 then
         local prev_index = prev:index()
-        local col_node = tree.Node:new({ vertical = false }, { node, prev })
+        local col_node = tree.Node:new({ row = false }, { node, prev })
         parent:add_child(col_node, prev_index)
       else
         parent:add_child(prev)
@@ -22,7 +22,7 @@ M.updater = {
     end
 
     local cur = node.parent
-    while cur.parent and not cur.parent.prop.vertical do
+    while cur.parent and not cur.parent.prop.row do
       cur = cur.parent
     end
 
@@ -31,11 +31,11 @@ M.updater = {
       return root
     end
 
-    return tree.Node:new({ vertical = true }, { node, cur })
+    return tree.Node:new({ row = true }, { node, cur })
   end,
 
   far = function(root, node)
-    return tree.Node:new({ vertical = true }, { node, root })
+    return tree.Node:new({ row = true }, { node, root })
   end
 }
 

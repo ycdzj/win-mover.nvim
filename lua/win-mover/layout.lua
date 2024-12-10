@@ -3,11 +3,11 @@ local utils = require('win-mover.utils')
 
 local M = {}
 
-local function sanitize(root)
+function M.normalize(root)
   local children = utils.shallow_copy(root.children)
   root:clear_children()
   for _, child in ipairs(children) do
-    child = sanitize(child)
+    child = M.normalize(child)
     if child then
       if #child.children > 0 and child.prop.row == root.prop.row then
         root:add_children(child.children)
@@ -44,42 +44,48 @@ local function remove_identical(l1, l2)
   end
 end
 
-local function apply(original, updated)
+function M.apply(original, updated)
   if original then
     if original.prop.row ~= updated.prop.row then
-      apply(nil, updated)
+      M.apply(nil, updated)
       return
     end
     local original_children = utils.shallow_copy(original.children)
     local updated_children = utils.shallow_copy(updated.children)
     remove_identical(original_children, updated_children)
     if #original_children == 1 and #updated_children == 1 then
-      apply(original_children[1], updated_children[1])
+      M.apply(original_children[1], updated_children[1])
     elseif #updated_children > 0 then
       updated:clear_children()
       updated:add_children(updated_children)
       updated.prop.win_id = updated.children[#updated.children].prop.win_id
-      apply(nil, updated)
+      M.apply(nil, updated)
     end
     return
   end
 
   for _, child in ipairs(updated.children) do
     if child.prop.win_id ~= updated.prop.win_id then
+      print(child.prop.win_id)
+      print(updated.prop.win_id)
       vim.fn.win_splitmove(child.prop.win_id, updated.prop.win_id, {
         vertical = updated.prop.row,
       })
     end
-    apply(nil, child)
+    M.apply(nil, child)
   end
 end
 
-function M.apply(original_tree, updated_tree)
-  original_tree = sanitize(original_tree)
-  updated_tree = sanitize(updated_tree)
-  if updated_tree then
-    apply(original_tree, updated_tree)
+function M.build_from_winlayout(winlayout)
+  if winlayout[1] == 'leaf' then
+    return tree.Node:new({ row = false, win_id = winlayout[2] })
   end
+
+  local root = tree.Node:new({ row = winlayout[1] == 'row' })
+  for _, sub_layout in ipairs(winlayout[2]) do
+    root:add_child(M.build_from_winlayout(sub_layout))
+  end
+  return root
 end
 
 return M

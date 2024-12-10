@@ -23,16 +23,23 @@ local function remove_ignored(root)
 end
 
 local function move(win_id, updater, reverse)
-  local win_layout = vim.fn.winlayout()
-  local updated_tree = tree.build_from_layout(win_layout)
-  local original_tree = tree.build_from_layout(win_layout)
-
-  remove_ignored(updated_tree)
+  local original_tree = layout.build_from_winlayout(vim.fn.winlayout())
   remove_ignored(original_tree)
 
+  original_tree = layout.normalize(original_tree)
+  if not original_tree then
+    return
+  end
+
+  local updated_tree = original_tree:copy()
   local win_node = tree.search_win(updated_tree, win_id)
   assert(win_node, 'Window should exist')
+
   updated_tree = mover.move(updated_tree, win_node, updater, reverse)
+  updated_tree = layout.normalize(updated_tree)
+  if not updated_tree then
+    return
+  end
 
   layout.apply(original_tree, updated_tree)
   vim.cmd('redraw')

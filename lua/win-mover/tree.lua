@@ -5,11 +5,11 @@ local M = {}
 M.Node = {}
 M.Node.__index = M.Node
 
-function M.Node:new(properties, children)
+function M.Node:new(prop, children)
   local node = setmetatable({
     parent = nil,
     children = {},
-    prop = properties or {},
+    prop = prop or {},
   }, self)
   node:add_children(children or {})
   return node
@@ -69,6 +69,14 @@ function M.Node:next()
   return self.parent.children[index + 1]
 end
 
+function M.Node:copy()
+  local node = M.Node:new(utils.shallow_copy(self.prop))
+  for _, child in ipairs(self.children) do
+    node:add_child(child:copy())
+  end
+  return node
+end
+
 function M.search_win(root, win_id)
   for _, child in ipairs(root.children) do
     local node = M.search_win(child, win_id)
@@ -111,18 +119,6 @@ function M.identical(root1, root2)
     end
   end
   return true
-end
-
-function M.build_from_layout(layout)
-  if layout[1] == 'leaf' then
-    return M.Node:new({ row = false, win_id = layout[2] })
-  end
-
-  local root = M.Node:new({ row = layout[1] == 'row' })
-  for _, sub_layout in ipairs(layout[2]) do
-    root:add_child(M.build_from_layout(sub_layout))
-  end
-  return root
 end
 
 return M

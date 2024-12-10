@@ -1,4 +1,4 @@
-local applier = require('win-mover.applier')
+local layout = require('win-mover.layout')
 local filter = require('win-mover.filter')
 local mover = require('win-mover.mover')
 local tree = require('win-mover.tree')
@@ -23,9 +23,9 @@ local function remove_ignored(root)
 end
 
 local function move(win_id, updater, reverse)
-  local layout = vim.fn.winlayout()
-  local updated_tree = tree.build_from_layout(layout)
-  local original_tree = tree.build_from_layout(layout)
+  local win_layout = vim.fn.winlayout()
+  local updated_tree = tree.build_from_layout(win_layout)
+  local original_tree = tree.build_from_layout(win_layout)
 
   remove_ignored(updated_tree)
   remove_ignored(original_tree)
@@ -34,7 +34,7 @@ local function move(win_id, updater, reverse)
   assert(win_node, 'Window should exist')
   updated_tree = mover.move(updated_tree, win_node, updater, reverse)
 
-  applier.apply(original_tree, updated_tree)
+  layout.apply(original_tree, updated_tree)
 end
 
 function M.enter_move_mode()

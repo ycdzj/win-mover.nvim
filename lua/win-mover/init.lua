@@ -1,7 +1,7 @@
-local layout = require('win-mover.layout')
-local highlight = require('win-mover.highlight')
-local utils = require('win-mover.utils')
 local config = require('win-mover.config')
+local highlight = require('win-mover.highlight')
+local layout = require('win-mover.layout')
+local utils = require('win-mover.utils')
 
 local directions = { h = 'left', l = 'right', k = 'up', j = 'down' }
 
@@ -14,6 +14,7 @@ function M.enter_move_mode()
   end
 
   local highlight_win = highlight.new(cur_win)
+
   while true do
     highlight_win.refresh()
 

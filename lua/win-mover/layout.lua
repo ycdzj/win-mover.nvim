@@ -1,5 +1,5 @@
-local tree = require('win-mover.tree')
 local config = require('win-mover.config')
+local tree = require('win-mover.tree')
 
 local M = {}
 
@@ -124,8 +124,12 @@ function M.move(win_id, far, dir)
   local win_node = tree.search_win(root, win_id)
   assert(win_node, 'Window should exist')
 
-  if directions[dir].diagonal then tree.reverse_diagonal(root) end
-  if directions[dir].horizontal then tree.reverse_horizontal(root) end
+  if directions[dir].diagonal then
+    tree.reverse_diagonal(root)
+  end
+  if directions[dir].horizontal then
+    tree.reverse_horizontal(root)
+  end
 
   if far then
     root = move_far(root, win_node)
@@ -133,8 +137,12 @@ function M.move(win_id, far, dir)
     root = move_adj(root, win_node)
   end
 
-  if directions[dir].horizontal then tree.reverse_horizontal(root) end
-  if directions[dir].diagonal then tree.reverse_diagonal(root) end
+  if directions[dir].horizontal then
+    tree.reverse_horizontal(root)
+  end
+  if directions[dir].diagonal then
+    tree.reverse_diagonal(root)
+  end
 
   root = normalize(root)
   if not root then

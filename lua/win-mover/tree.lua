@@ -64,6 +64,11 @@ function M.Node:prev()
   return self.parent.children[index - 1]
 end
 
+function M.Node:next()
+  local index = self:index()
+  return self.parent.children[index + 1]
+end
+
 function M.search_win(root, win_id)
   for _, child in ipairs(root.children) do
     local node = M.search_win(child, win_id)

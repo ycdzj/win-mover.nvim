@@ -9,16 +9,24 @@ M.updater = {
       return root
     end
 
-    local prev = node:prev()
-    if parent.prop.row and prev then
-      if #parent.children > 2 then
-        local prev_index = prev:index()
+    if parent.prop.row then
+      local prev = node:prev()
+      if prev then
+        local index = prev:index()
         local col_node = tree.Node:new({ row = false }, { node, prev })
-        parent:add_child(col_node, prev_index)
-      else
-        parent:add_child(prev)
+        parent:add_child(col_node, index)
+        return root
       end
-      return root
+    end
+
+    if not parent.prop.row then
+      local next = node:next()
+      if next then
+        local index = node:index()
+        local row_node = tree.Node:new({ row = true }, { node, next })
+        parent:add_child(row_node, index)
+        return root
+      end
     end
 
     local cur = node.parent

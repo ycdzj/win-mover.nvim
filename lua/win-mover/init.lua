@@ -1,5 +1,5 @@
 local layout = require('win-mover.layout')
-local filter = require('win-mover.filter')
+local highlight = require('win-mover.highlight')
 local mover = require('win-mover.mover')
 local tree = require('win-mover.tree')
 local utils = require('win-mover.utils')
@@ -51,9 +51,9 @@ function M.enter_move_mode()
     return
   end
 
-  local filter_win = filter.new(cur_win)
+  local highlight_win = highlight.new(cur_win)
   while true do
-    filter_win.refresh()
+    highlight_win.refresh()
 
     vim.api.nvim_echo({ { '-- Window Move Mode --' } }, false, {})
     local input = utils.getchar()
@@ -82,7 +82,7 @@ function M.enter_move_mode()
     end
   end
 
-  filter_win.close()
+  highlight_win.close()
 end
 
 function M.setup(setup_config)

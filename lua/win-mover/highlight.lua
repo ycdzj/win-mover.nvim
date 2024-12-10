@@ -4,7 +4,7 @@ local highlight_ns = vim.api.nvim_create_namespace('WinMoverLayer')
 vim.api.nvim_set_hl(highlight_ns, 'Normal', { bg = '#2e3440' })
 
 -- Create a semi-transparent floating window above the window specified by `win` for highlight
--- purpose.
+-- purposes.
 function M.new(win)
   local scratch_buf = vim.api.nvim_create_buf(false, true)
   local float_win

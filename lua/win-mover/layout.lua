@@ -1,13 +1,21 @@
 local tree = require('win-mover.tree')
-local utils = require('win-mover.utils')
+local config = require('win-mover.config')
 
 local M = {}
 
-function M.normalize(root)
-  local children = utils.shallow_copy(root.children)
+local directions = {
+  left = { diagonal = false, horizontal = false },
+  right = { diagonal = false, horizontal = true },
+  up = { diagonal = true, horizontal = false },
+  down = { diagonal = true, horizontal = true },
+}
+
+local function normalize(root)
+  local children = vim.tbl_extend('force', {}, root.children)
   root:clear_children()
+
   for _, child in ipairs(children) do
-    child = M.normalize(child)
+    child = normalize(child)
     if child then
       if #child.children > 0 and child.prop.row == root.prop.row then
         root:add_children(child.children)
@@ -16,76 +24,126 @@ function M.normalize(root)
       end
     end
   end
+
   if #root.children == 0 and not root.prop.win_id then
     return nil
   end
+
   if #root.children == 1 then
-    local child = root.children[1]
-    root:remove_child(child)
-    return child
+    return root.children[1]
   end
-  if #root.children > 0 then
-    root.prop.win_id = root.children[#root.children].prop.win_id
-  end
+
   return root
 end
 
-local function remove_identical(l1, l2)
-  while #l1 > 0 and #l2 > 0 do
-    if tree.identical(l1[#l1], l2[#l2]) then
-      table.remove(l1, #l1)
-      table.remove(l2, #l2)
-    elseif tree.identical(l1[1], l2[1]) then
-      table.remove(l1, 1)
-      table.remove(l2, 1)
-    else
-      break
+local function move_adj(root, node)
+  local parent = node.parent
+  if parent == nil then
+    return root
+  end
+
+  if parent.prop.row then
+    local prev = node:prev()
+    if prev then
+      local index = prev:index()
+      local col_node = tree.Node:new({ row = false }, { node, prev })
+      parent:add_child(col_node, index)
+      return root
     end
   end
+
+  if not parent.prop.row then
+    local next = node:next()
+    if next then
+      local index = node:index()
+      local row_node = tree.Node:new({ row = true }, { node, next })
+      parent:add_child(row_node, index)
+      return root
+    end
+  end
+
+  local cur = node.parent
+  while cur ~= root and not cur.parent.prop.row do
+    cur = cur.parent
+  end
+
+  if cur ~= root then
+    cur.parent:add_child(node, cur:index())
+    return root
+  end
+
+  return tree.Node:new({ row = true }, { node, cur })
 end
 
-function M.apply(original, updated)
-  if original then
-    if original.prop.row ~= updated.prop.row then
-      M.apply(nil, updated)
-      return
-    end
-    local original_children = utils.shallow_copy(original.children)
-    local updated_children = utils.shallow_copy(updated.children)
-    remove_identical(original_children, updated_children)
-    if #original_children == 1 and #updated_children == 1 then
-      M.apply(original_children[1], updated_children[1])
-    elseif #updated_children > 0 then
-      updated:clear_children()
-      updated:add_children(updated_children)
-      updated.prop.win_id = updated.children[#updated.children].prop.win_id
-      M.apply(nil, updated)
-    end
-    return
-  end
+local function move_far(root, node)
+  return tree.Node:new({ row = true }, { node, root })
+end
 
-  for _, child in ipairs(updated.children) do
-    if child.prop.win_id ~= updated.prop.win_id then
-      print(child.prop.win_id)
-      print(updated.prop.win_id)
-      vim.fn.win_splitmove(child.prop.win_id, updated.prop.win_id, {
-        vertical = updated.prop.row,
+local function apply(root)
+  for _, child in ipairs(root.children) do
+    if child.prop.win_id ~= root.prop.win_id then
+      vim.fn.win_splitmove(child.prop.win_id, root.prop.win_id, {
+        vertical = root.prop.row,
       })
     end
-    M.apply(nil, child)
+    apply(child)
   end
 end
 
-function M.build_from_winlayout(winlayout)
+local function build_tree(winlayout)
   if winlayout[1] == 'leaf' then
-    return tree.Node:new({ row = false, win_id = winlayout[2] })
+    local win_id = winlayout[2]
+    if config.opts.ignore(win_id) then
+      win_id = nil
+    end
+
+    return tree.Node:new({ row = false, win_id = win_id })
   end
 
   local root = tree.Node:new({ row = winlayout[1] == 'row' })
   for _, sub_layout in ipairs(winlayout[2]) do
-    root:add_child(M.build_from_winlayout(sub_layout))
+    root:add_child(build_tree(sub_layout))
   end
+
   return root
+end
+
+local function fill_win_id(root)
+  for _, child in ipairs(root.children) do
+    fill_win_id(child)
+    root.prop.win_id = child.prop.win_id
+  end
+end
+
+function M.move(win_id, far, dir)
+  local root = normalize(build_tree(vim.fn.winlayout()))
+  if not root then
+    return
+  end
+
+  local win_node = tree.search_win(root, win_id)
+  assert(win_node, 'Window should exist')
+
+  if directions[dir].diagonal then tree.reverse_diagonal(root) end
+  if directions[dir].horizontal then tree.reverse_horizontal(root) end
+
+  if far then
+    root = move_far(root, win_node)
+  else
+    root = move_adj(root, win_node)
+  end
+
+  if directions[dir].horizontal then tree.reverse_horizontal(root) end
+  if directions[dir].diagonal then tree.reverse_diagonal(root) end
+
+  root = normalize(root)
+  if not root then
+    return
+  end
+
+  fill_win_id(root)
+  apply(root)
+  vim.cmd('redraw')
 end
 
 return M

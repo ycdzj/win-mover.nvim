@@ -43,7 +43,7 @@ function M.Node:add_child(child, index)
 end
 
 function M.Node:add_children(children)
-  children = utils.shallow_copy(children)
+  children = vim.tbl_extend('force', {}, children)
   for _, child in ipairs(children) do
     self:add_child(child)
   end
@@ -67,14 +67,6 @@ end
 function M.Node:next()
   local index = self:index()
   return self.parent.children[index + 1]
-end
-
-function M.Node:copy()
-  local node = M.Node:new(utils.shallow_copy(self.prop))
-  for _, child in ipairs(self.children) do
-    node:add_child(child:copy())
-  end
-  return node
 end
 
 function M.search_win(root, win_id)
@@ -104,21 +96,6 @@ function M.reverse_horizontal(root)
   for _, child in ipairs(root.children) do
     M.reverse_horizontal(child)
   end
-end
-
-function M.identical(root1, root2)
-  if not utils.shallow_compare(root1.prop, root2.prop) then
-    return false
-  end
-  if #root1.children ~= #root2.children then
-    return false
-  end
-  for i, _ in ipairs(root1.children) do
-    if not M.identical(root1.children[i], root2.children[i]) then
-      return false
-    end
-  end
-  return true
 end
 
 return M

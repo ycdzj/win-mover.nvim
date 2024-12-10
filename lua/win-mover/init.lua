@@ -35,6 +35,7 @@ local function move(win_id, updater, reverse)
   updated_tree = mover.move(updated_tree, win_node, updater, reverse)
 
   layout.apply(original_tree, updated_tree)
+  vim.cmd('redraw')
 end
 
 function M.enter_move_mode()
@@ -42,17 +43,19 @@ function M.enter_move_mode()
   if config.ignore(cur_win) then
     return
   end
+
+  local filter_win = filter.new(cur_win)
   while true do
-    local f = filter.create(cur_win)
+    filter_win.refresh()
+
     vim.api.nvim_echo({ { '-- Window Move Mode --' } }, false, {})
-    vim.cmd('redraw')
     local input = utils.getchar()
-    f.close()
 
     if input == 'q' then
       vim.api.nvim_echo({ { '' } }, false, {})
       break
     end
+
     if input == 'h' then
       move(cur_win, mover.updater.adj, mover.reverse.left)
     elseif input == 'j' then
@@ -71,6 +74,8 @@ function M.enter_move_mode()
       move(cur_win, mover.updater.far, mover.reverse.right)
     end
   end
+
+  filter_win.close()
 end
 
 function M.setup(setup_config)

@@ -3,20 +3,15 @@ local highlight = require('win-mover.highlight')
 local mover = require('win-mover.mover')
 local tree = require('win-mover.tree')
 local utils = require('win-mover.utils')
+local config = require('win-mover.config')
 
 local M = {}
-
-local config = {
-  ignore = function(win_id)
-    return false
-  end,
-}
 
 local function remove_ignored(root)
   local children = utils.shallow_copy(root.children)
   for _, child in ipairs(children) do
     remove_ignored(child)
-    if child.prop.win_id and config.ignore(child.prop.win_id) then
+    if child.prop.win_id and config.opts.ignore(child.prop.win_id) then
       root:remove_child(child)
     end
   end
@@ -47,7 +42,7 @@ end
 
 function M.enter_move_mode()
   local cur_win = vim.api.nvim_get_current_win()
-  if config.ignore(cur_win) then
+  if config.opts.ignore(cur_win) then
     return
   end
 
@@ -85,9 +80,8 @@ function M.enter_move_mode()
   highlight_win.close()
 end
 
-function M.setup(setup_config)
-  setup_config = setup_config or {}
-  utils.merge_table(config, setup_config)
+function M.setup(opts)
+  config.setup(opts)
 end
 
 return M

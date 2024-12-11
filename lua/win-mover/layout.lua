@@ -22,10 +22,10 @@ local function build_tree(winlayout)
   return root
 end
 
--- Ensure that the following is satified in the layout tree:
+-- Create a new tree that satisfies the following conditions:
 -- 1. Each non-leaf node contains more than one child.
--- 2. For each non-root node, node.prop.row ~= node.parent.prop.row
--- 3. For each node, prop.ignored is false
+-- 2. For each non-root node, `node.prop.row` is not equal to `node.parent.prop.row`.
+-- 3. All the ignored nodes are removed.
 local function normalize(old_node)
   if old_node.prop.ignored then
     return nil
@@ -54,24 +54,11 @@ local function normalize(old_node)
   return new_node
 end
 
-local function clear_size(root, clear_height, clear_width)
-  if clear_width then
-    root.prop.width = nil
-  end
-  if clear_height then
-    root.prop.height = nil
-  end
-  for _, child in ipairs(root.children) do
-    clear_size(child, clear_height, clear_width)
-  end
-end
-
 -- `node` is inside the layout tree rooted at `root`. Move `node` one step left.
 local function move_left(root, node)
   if node == root then
     return root
   end
-  clear_size(node, true, true)
 
   local parent = node.parent
 
@@ -80,7 +67,6 @@ local function move_left(root, node)
     if next then
       local index = node:index()
       local row_node = tree.Node:new({ row = true }, { node, next })
-      clear_size(row_node, true, true)
       parent:add_child(row_node, index)
       return root
     end
@@ -90,7 +76,6 @@ local function move_left(root, node)
   if prev then
     local index = prev:index()
     local col_node = tree.Node:new({ row = not parent.prop.row }, { node, prev })
-    clear_size(col_node, true, true)
     parent:add_child(col_node, index)
     return root
   end
@@ -107,7 +92,6 @@ local function move_left(root, node)
   end
 
   cur.parent:add_child(node, cur:index())
-  clear_size(cur.parent, false, true)
   return root
 end
 
@@ -187,7 +171,7 @@ end
 
 -- We only implement the logic for moving a window to the left. Moving in other directions is
 -- achieved by reversing the layout tree diagonally or horizontally, moving the window to the
--- left, and then reversing the layout tree back. Note that reversion occurs in memory and we
+-- left, and then reversing the layout tree back. Note that reversion occurs in memory only and we
 -- don't actually reverse the neovim window layout.
 local directions = {
   left = { diagonal = false, horizontal = false },

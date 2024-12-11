@@ -1,27 +1,22 @@
 local config = require('win-mover.config')
 local tree = require('win-mover.tree')
 
-local function prop(win_id, is_ignored)
-  local p = { row = false }
-
-  if config.opts.ignore(win_id) == is_ignored then
-    p.win_id = win_id
-    p.width = vim.api.nvim_win_get_width(win_id)
-    p.height = vim.api.nvim_win_get_height(win_id)
-  end
-
-  return p
-end
-
 -- Build the layout tree from neovim winlayout.
-local function build_tree(winlayout, is_ignored)
+local function build_tree(winlayout)
   if winlayout[1] == 'leaf' then
-    return tree.Node:new(prop(winlayout[2], is_ignored))
+    local win_id = winlayout[2]
+    return tree.Node:new({
+      row = false,
+      win_id = win_id,
+      ignored = config.opts.ignore(win_id),
+      width = vim.api.nvim_win_get_width(win_id),
+      height = vim.api.nvim_win_get_height(win_id),
+    })
   end
 
   local root = tree.Node:new({ row = winlayout[1] == 'row' })
   for _, sub_layout in ipairs(winlayout[2]) do
-    root:add_child(build_tree(sub_layout, is_ignored))
+    root:add_child(build_tree(sub_layout))
   end
 
   return root
@@ -30,30 +25,33 @@ end
 -- Ensure that the following is satified in the layout tree:
 -- 1. Each non-leaf node contains more than one child.
 -- 2. For each non-root node, node.prop.row ~= node.parent.prop.row
-local function normalize(root)
-  local children = vim.tbl_extend('force', {}, root.children)
-  root:clear_children()
+-- 3. For each node, prop.ignored is false
+local function normalize(old_node)
+  if old_node.prop.ignored then
+    return nil
+  end
 
-  for _, child in ipairs(children) do
+  local new_node = tree.Node:new(old_node.prop)
+  for _, child in ipairs(old_node.children) do
     child = normalize(child)
     if child then
-      if #child.children > 0 and child.prop.row == root.prop.row then
-        root:add_children(child.children)
+      if #child.children > 0 and child.prop.row == new_node.prop.row then
+        new_node:add_children(child.children)
       else
-        root:add_child(child)
+        new_node:add_child(child)
       end
     end
   end
 
-  if #root.children == 0 and not root.prop.win_id then
+  if #new_node.children == 0 and not new_node.prop.win_id then
     return nil
   end
 
-  if #root.children == 1 then
-    return root.children[1]
+  if #new_node.children == 1 then
+    return new_node.children[1]
   end
 
-  return root
+  return new_node
 end
 
 local function clear_size(root, clear_height, clear_width)
@@ -146,15 +144,13 @@ local function apply_layout(root)
   end
 end
 
-local function apply_size(root)
-  if root.prop.width then
+local function restore_ignored_win_size(root)
+  if root.prop.ignored then
     vim.api.nvim_win_set_width(root.prop.win_id, root.prop.width)
-  end
-  if root.prop.height then
     vim.api.nvim_win_set_height(root.prop.win_id, root.prop.height)
   end
   for _, child in ipairs(root.children) do
-    apply_size(child)
+    restore_ignored_win_size(child)
   end
 end
 
@@ -203,41 +199,37 @@ local directions = {
 local M = {}
 
 function M.move(win_id, far, dir)
-  local winlayout = vim.fn.winlayout()
-  local root = normalize(build_tree(winlayout, false))
-  local ignored_wins = build_tree(winlayout, true)
-
-  if not root then
+  local old_layout = build_tree(vim.fn.winlayout())
+  local new_layout = normalize(old_layout)
+  if not new_layout then
     return
   end
 
-  local win_node = search_win(root, win_id)
+  local win_node = search_win(new_layout, win_id)
   assert(win_node, 'Window should exist')
 
   if directions[dir].diagonal then
-    reverse_diagonal(root)
+    reverse_diagonal(new_layout)
   end
   if directions[dir].horizontal then
-    reverse_horizontal(root)
+    reverse_horizontal(new_layout)
   end
 
   if far then
-    root = move_far_left(root, win_node)
+    new_layout = move_far_left(new_layout, win_node)
   else
-    root = move_left(root, win_node)
+    new_layout = move_left(new_layout, win_node)
   end
 
   if directions[dir].horizontal then
-    reverse_horizontal(root)
+    reverse_horizontal(new_layout)
   end
   if directions[dir].diagonal then
-    reverse_diagonal(root)
+    reverse_diagonal(new_layout)
   end
 
-  root = normalize(root)
-  apply_layout(root)
-  apply_size(root)
-  apply_size(ignored_wins)
+  apply_layout(normalize(new_layout))
+  restore_ignored_win_size(old_layout)
   vim.cmd('redraw')
 end
 

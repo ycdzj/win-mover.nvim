@@ -69,33 +69,4 @@ function M.Node:next()
   return self.parent.children[index + 1]
 end
 
-function M.search_win(root, win_id)
-  for _, child in ipairs(root.children) do
-    local node = M.search_win(child, win_id)
-    if node then
-      return node
-    end
-  end
-  if root.prop.win_id == win_id then
-    return root
-  end
-  return nil
-end
-
-function M.reverse_diagonal(root)
-  root.prop.row = not root.prop.row
-  for _, child in ipairs(root.children) do
-    M.reverse_diagonal(child)
-  end
-end
-
-function M.reverse_horizontal(root)
-  if root.prop.row then
-    root:reverse_children()
-  end
-  for _, child in ipairs(root.children) do
-    M.reverse_horizontal(child)
-  end
-end
-
 return M

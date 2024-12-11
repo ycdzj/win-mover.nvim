@@ -5,16 +5,7 @@ local utils = require('win-mover.utils')
 
 local directions = { h = 'left', l = 'right', k = 'up', j = 'down' }
 
-local M = {}
-
-function M.enter_move_mode()
-  local cur_win = vim.api.nvim_get_current_win()
-  if config.opts.ignore(cur_win) then
-    return
-  end
-
-  local highlight_win = highlight.new(cur_win)
-
+local function move_mode_loop(cur_win, highlight_win)
   while true do
     highlight_win.refresh()
 
@@ -31,6 +22,22 @@ function M.enter_move_mode()
       local far = (input == string.upper(input))
       layout.move(cur_win, far, direction)
     end
+  end
+end
+
+local M = {}
+
+function M.enter_move_mode()
+  local cur_win = vim.api.nvim_get_current_win()
+  if config.opts.ignore(cur_win) then
+    return
+  end
+
+  local highlight_win = highlight.new(cur_win)
+
+  local ok, result = pcall(move_mode_loop, cur_win, highlight_win)
+  if not ok then
+    print("win-mover encountered error:", result)
   end
 
   highlight_win.close()

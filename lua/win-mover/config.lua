@@ -3,7 +3,7 @@ local M = {}
 M.default_opts = {
   ignore = {
     filetypes = {},
-  }
+  },
 }
 
 M.opts = M.default_opts

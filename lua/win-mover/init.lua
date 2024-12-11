@@ -37,7 +37,7 @@ function M.enter_move_mode()
 
   local ok, result = pcall(move_mode_loop, cur_win, highlight_win)
   if not ok then
-    print("win-mover encountered error:", result)
+    print('win-mover encountered error:', result)
   end
 
   highlight_win.close()

@@ -1,15 +1,28 @@
 local config = require('win-mover.config')
 local tree = require('win-mover.tree')
 
-local M = {}
+-- Build the layout tree from neovim winlayout.
+local function build_tree(winlayout)
+  if winlayout[1] == 'leaf' then
+    local win_id = winlayout[2]
+    if config.opts.ignore(win_id) then
+      win_id = nil
+    end
 
-local directions = {
-  left = { diagonal = false, horizontal = false },
-  right = { diagonal = false, horizontal = true },
-  up = { diagonal = true, horizontal = false },
-  down = { diagonal = true, horizontal = true },
-}
+    return tree.Node:new({ row = false, win_id = win_id })
+  end
 
+  local root = tree.Node:new({ row = winlayout[1] == 'row' })
+  for _, sub_layout in ipairs(winlayout[2]) do
+    root:add_child(build_tree(sub_layout))
+  end
+
+  return root
+end
+
+-- Ensure that the following is satified in the layout tree:
+-- 1. Each non-leaf node contains more than one child.
+-- 2. For each non-root node, node.prop.row ~= node.parent.prop.row
 local function normalize(root)
   local children = vim.tbl_extend('force', {}, root.children)
   root:clear_children()
@@ -36,7 +49,8 @@ local function normalize(root)
   return root
 end
 
-local function move_adj(root, node)
+-- `node` is inside the layout tree rooted at `root`. Move `node` one step left.
+local function move_left(root, node)
   if node == root then
     return root
   end
@@ -76,11 +90,29 @@ local function move_adj(root, node)
   return tree.Node:new({ row = true }, { node, cur })
 end
 
-local function move_far(root, node)
+-- `node` is inside the layout tree rooted at `root`. Move `node` to the leftmost position.
+local function move_far_left(root, node)
   return tree.Node:new({ row = true }, { node, root })
 end
 
+-- For each non-leaf node, assign the id of the last window in the sub-tree to prop.win_id.
+local function fill_win_id(root)
+  for _, child in ipairs(root.children) do
+    fill_win_id(child)
+    root.prop.win_id = child.prop.win_id
+  end
+end
+
+-- Apply the layout tree by updating neovim winlayout.
 local function apply(root)
+  if not root then
+    return
+  end
+
+  if not root.prop.win_id then
+    fill_win_id(root)
+  end
+
   for _, child in ipairs(root.children) do
     if child.prop.win_id ~= root.prop.win_id then
       vim.fn.win_splitmove(child.prop.win_id, root.prop.win_id, {
@@ -91,30 +123,18 @@ local function apply(root)
   end
 end
 
-local function build_tree(winlayout)
-  if winlayout[1] == 'leaf' then
-    local win_id = winlayout[2]
-    if config.opts.ignore(win_id) then
-      win_id = nil
-    end
+-- We only implement the logic for moving a window to the left. Moving in other directions is
+-- achieved by reversing the layout tree diagonally or horizontally, moving the window to the
+-- left, and then reversing the layout tree back. Note that reversion occurs in our memory and we
+-- don't actually reverse the neovim window layout.
+local directions = {
+  left = { diagonal = false, horizontal = false },
+  right = { diagonal = false, horizontal = true },
+  up = { diagonal = true, horizontal = false },
+  down = { diagonal = true, horizontal = true },
+}
 
-    return tree.Node:new({ row = false, win_id = win_id })
-  end
-
-  local root = tree.Node:new({ row = winlayout[1] == 'row' })
-  for _, sub_layout in ipairs(winlayout[2]) do
-    root:add_child(build_tree(sub_layout))
-  end
-
-  return root
-end
-
-local function fill_win_id(root)
-  for _, child in ipairs(root.children) do
-    fill_win_id(child)
-    root.prop.win_id = child.prop.win_id
-  end
-end
+local M = {}
 
 function M.move(win_id, far, dir)
   local root = normalize(build_tree(vim.fn.winlayout()))
@@ -133,9 +153,9 @@ function M.move(win_id, far, dir)
   end
 
   if far then
-    root = move_far(root, win_node)
+    root = move_far_left(root, win_node)
   else
-    root = move_adj(root, win_node)
+    root = move_left(root, win_node)
   end
 
   if directions[dir].horizontal then
@@ -145,13 +165,7 @@ function M.move(win_id, far, dir)
     tree.reverse_diagonal(root)
   end
 
-  root = normalize(root)
-  if not root then
-    return
-  end
-
-  fill_win_id(root)
-  apply(root)
+  apply(normalize(root))
   vim.cmd('redraw')
 end
 

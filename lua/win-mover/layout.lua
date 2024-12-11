@@ -37,10 +37,11 @@ local function normalize(root)
 end
 
 local function move_adj(root, node)
-  local parent = node.parent
-  if parent == nil then
+  if node == root then
     return root
   end
+
+  local parent = node.parent
 
   if parent.prop.row then
     local prev = node:prev()

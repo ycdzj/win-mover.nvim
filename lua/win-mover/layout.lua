@@ -22,7 +22,7 @@ local function build_tree(winlayout)
   return root
 end
 
--- Create a new tree that satisfies the following conditions:
+-- Clone the tree and ensure that the following conditions are met:
 -- 1. Each non-leaf node contains more than one child.
 -- 2. For each non-root node, `node.prop.row` is not equal to `node.parent.prop.row`.
 -- 3. All the ignored nodes are removed.
@@ -54,7 +54,7 @@ local function normalize(old_node)
   return new_node
 end
 
--- `node` is inside the layout tree rooted at `root`. Move `node` one step left.
+-- Move `node` one step left. It's required that `node` is inside the layout tree rooted at `root`.
 local function move_left(root, node)
   if node == root then
     return root
@@ -95,7 +95,8 @@ local function move_left(root, node)
   return root
 end
 
--- `node` is inside the layout tree rooted at `root`. Move `node` to the leftmost position.
+-- Move `node` to the leftmost position. It's required that `node` is inside the layout tree
+-- rooted at `root`.
 local function move_far_left(root, node)
   return tree.Node:new({ row = true }, { node, root })
 end
@@ -108,7 +109,7 @@ local function fill_win_id(root)
   end
 end
 
--- Apply the layout tree by updating neovim winlayout.
+-- Apply the layout tree by calling win_splitmove.
 local function apply_layout(root)
   if not root then
     return
@@ -128,6 +129,7 @@ local function apply_layout(root)
   end
 end
 
+-- Restore the original sizes of ignored windows.
 local function restore_ignored_win_size(root)
   if root.prop.ignored then
     vim.api.nvim_win_set_width(root.prop.win_id, root.prop.width)

@@ -29,7 +29,7 @@ local M = {}
 
 function M.enter_move_mode()
   local cur_win = vim.api.nvim_get_current_win()
-  if config.opts.ignore(cur_win) then
+  if config.is_win_ignored(cur_win) then
     return
   end
 

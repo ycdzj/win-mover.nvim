@@ -8,7 +8,7 @@ local function build_tree(winlayout)
     return tree.Node:new({
       row = false,
       win_id = win_id,
-      ignored = config.opts.ignore(win_id),
+      ignored = config.is_win_ignored(win_id),
       width = vim.api.nvim_win_get_width(win_id),
       height = vim.api.nvim_win_get_height(win_id),
     })

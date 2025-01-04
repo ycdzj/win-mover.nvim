@@ -53,8 +53,10 @@ use {
 
 ## Example Configuration
 
-- Window Move Mode key bindings: `h,j,k,l` to move window, `q` or `<Esc>` to quit.
-- Ignore windows such as `NvimTree`, `neo-tree`, etc.
+This is an example that:
+
+- Binds `h,j,k,l` to move window in Window Move Mode, `q` or `<Esc>` to quit.
+- Ignores windows such as `NvimTree`, `neo-tree`, etc.
 
 ```lua
 local win_mover = require('win-mover')
@@ -84,11 +86,13 @@ win_mover.setup({
 
 ## Commands
 
-`:WinMover` : Enter Window Move Mode
+- `:WinMover`
+
+    Enter Window Move Mode
 
 ## Default Configuration
 
-Below are the defaults. You only need to specify what want to overwrite in your configuration.
+Below are the defaults. You only need to specify what you want to overwrite in your configuration.
 
 ```lua
 {

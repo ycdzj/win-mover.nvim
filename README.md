@@ -7,7 +7,7 @@
 ## Features
 
 - Window Move Mode similar to [WinShift.nvim](https://github.com/sindrets/winshift.nvim)
-- Ignore side windows (e.g. NvimTree) so they stay where they are
+- Ignore side windows (e.g. NvimTree) so they will not move
 - Simple implementation
 
 ## Requirements
@@ -51,11 +51,31 @@ use {
     ```
 2. Call `require('win-mover').setup` with your configuration before using this plugin.
 
-## Example Configuration
+## Configuration
 
-This is an example that:
+### Defaults
 
-- Binds `<leader>e` to enter Move Mode.
+```lua
+{
+  ignore = {
+    enable = false,
+    filetypes = {},
+  },
+  highlight = {
+    color = '#2e3440',
+    transparency = 60,
+  },
+  move_mode = {
+    keymap = {},
+  },
+}
+```
+
+### Example
+
+This is an example configuration that:
+
+- Binds `<leader>e` for entering Move Mode.
 - `h,j,k,l` to move window in Move Mode.
 - `q` or `<Esc>` to quit Move Mode.
 - Ignores windows such as `NvimTree`, `neo-tree`, etc.
@@ -93,22 +113,3 @@ vim.keymap.set("n", "<leader>e", win_mover.enter_move_mode, { noremap = true, si
 
     Enter Window Move Mode
 
-## Default Configuration
-
-Below are the defaults. You only need to specify what you want to overwrite in your configuration.
-
-```lua
-{
-  ignore = {
-    enable = false,
-    filetypes = {},
-  },
-  highlight = {
-    color = '#2e3440',
-    transparency = 60,
-  },
-  move_mode = {
-    keymap = {},
-  },
-}
-```

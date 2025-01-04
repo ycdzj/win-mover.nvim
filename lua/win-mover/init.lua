@@ -47,4 +47,16 @@ function M.setup(opts)
   config.setup(opts)
 end
 
+M.move_mode_ops = {
+  move_left = { far = false, direction = 'left' },
+  move_right = { far = false, direction = 'right' },
+  move_up = { far = false, direction = 'up' },
+  move_down = { far = false, direction = 'down' },
+  move_far_left = { far = true, direction = 'left' },
+  move_far_right = { far = true, direction = 'right' },
+  move_far_up = { far = true, direction = 'up' },
+  move_far_down = { far = true, direction = 'down' },
+  quit = { quit = true },
+}
+
 return M

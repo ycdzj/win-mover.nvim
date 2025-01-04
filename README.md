@@ -12,7 +12,7 @@
 
 ## Requirements
 
-- Neovim >= 0.7.2
+- Neovim >= 0.8.0
 
 ## Installation
 
@@ -55,7 +55,9 @@ use {
 
 This is an example that:
 
-- Binds `h,j,k,l` to move window in Window Move Mode, `q` or `<Esc>` to quit.
+- Binds `<leader>e` to enter Move Mode.
+- `h,j,k,l` to move window in Move Mode.
+- `q` or `<Esc>` to quit Move Mode.
 - Ignores windows such as `NvimTree`, `neo-tree`, etc.
 
 ```lua
@@ -82,6 +84,7 @@ win_mover.setup({
     },
   },
 })
+vim.keymap.set("n", "<leader>e", win_mover.enter_move_mode, { noremap = true, silent = true })
 ```
 
 ## Commands

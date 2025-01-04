@@ -14,6 +14,8 @@ M.default_opts = {
   },
 }
 
+M.highlight_ns = vim.api.nvim_create_namespace('WinMoverLayer')
+
 local function replace_termcodes(keymap)
   local new_keymap = {}
   for key, val in pairs(keymap) do
@@ -26,7 +28,6 @@ end
 function M.setup(opts)
   M.opts = vim.tbl_deep_extend('force', M.default_opts, opts or {})
   M.opts.move_mode.keymap = replace_termcodes(M.opts.move_mode.keymap)
-  M.highlight_ns = vim.api.nvim_create_namespace('WinMoverLayer')
   vim.api.nvim_set_hl(M.highlight_ns, 'Normal', { bg = M.opts.highlight.color })
 end
 

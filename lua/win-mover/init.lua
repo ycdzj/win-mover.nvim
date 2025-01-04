@@ -3,6 +3,20 @@ local highlight = require('win-mover.highlight')
 local layout = require('win-mover.layout')
 local utils = require('win-mover.utils')
 
+local M = {}
+
+M.ops = {
+  move_left = { far = false, direction = 'left' },
+  move_right = { far = false, direction = 'right' },
+  move_up = { far = false, direction = 'up' },
+  move_down = { far = false, direction = 'down' },
+  move_far_left = { far = true, direction = 'left' },
+  move_far_right = { far = true, direction = 'right' },
+  move_far_up = { far = true, direction = 'up' },
+  move_far_down = { far = true, direction = 'down' },
+  quit = { quit = true },
+}
+
 local function move_mode_loop(cur_win, highlight_win)
   while true do
     highlight_win.refresh()
@@ -18,10 +32,8 @@ local function move_mode_loop(cur_win, highlight_win)
   end
 end
 
-local M = {}
-
 function M.enter_move_mode()
-  if next(config.opts.move_mode.keymap) == nil then
+  if config.opts == nil or next(config.opts.move_mode.keymap) == nil then
     print('Win-mover: cannot enter Window Move Mode because keymap is not configured')
     return
   end
@@ -43,16 +55,6 @@ function M.setup(opts)
   config.setup(opts)
 end
 
-M.ops = {
-  move_left = { far = false, direction = 'left' },
-  move_right = { far = false, direction = 'right' },
-  move_up = { far = false, direction = 'up' },
-  move_down = { far = false, direction = 'down' },
-  move_far_left = { far = true, direction = 'left' },
-  move_far_right = { far = true, direction = 'right' },
-  move_far_up = { far = true, direction = 'up' },
-  move_far_down = { far = true, direction = 'down' },
-  quit = { quit = true },
-}
+vim.api.nvim_create_user_command('WinMover', M.enter_move_mode, {})
 
 return M

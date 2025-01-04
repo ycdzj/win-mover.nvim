@@ -1,7 +1,6 @@
-local M = {}
+local config = require('win-mover.config')
 
-local highlight_ns = vim.api.nvim_create_namespace('WinMoverLayer')
-vim.api.nvim_set_hl(highlight_ns, 'Normal', { bg = '#2e3440' })
+local M = {}
 
 -- Create a semi-transparent floating window above the window specified by `win` for highlight
 -- purposes.
@@ -18,8 +17,8 @@ function M.new(win)
     focusable = false,
   })
 
-  vim.api.nvim_win_set_hl_ns(float_win, highlight_ns)
-  vim.api.nvim_set_option_value('winblend', 60, { win = float_win })
+  vim.api.nvim_win_set_hl_ns(float_win, config.highlight_ns)
+  vim.api.nvim_set_option_value('winblend', config.opts.highlight.transparency, { win = float_win })
 
   return {
     refresh = function()

@@ -1,6 +1,6 @@
 # win-mover.nvim
 
-`win-mover.nvim` is a plugin that helps you move Neovim windows easily.
+`win-mover.nvim` is a Neovim window mover that respects side windows.
 
 ![Demo](./doc/demo.gif)
 
@@ -112,4 +112,8 @@ vim.keymap.set("n", "<leader>e", win_mover.enter_move_mode, { noremap = true, si
 - `:WinMover`
 
     Enter Window Move Mode
+
+## License
+
+MIT License
 

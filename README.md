@@ -1,6 +1,6 @@
 # win-mover.nvim
 
-`win-mover.nvim` is a Neovim window mover that respects side windows.
+`win-mover.nvim` is a Neovim window mover that ignores side windows.
 
 ![Demo](./doc/demo.gif)
 

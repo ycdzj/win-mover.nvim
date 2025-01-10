@@ -24,10 +24,7 @@ Install it with your favorite plugin manager:
 {
   'ycdzj/win-mover.nvim',
   lazy = false,
-  config = function()
-    local win_mover = require('win-mover')
-    win_mover.setup({}) -- configuration goes here
-  end,
+  opts = {}, -- configuration goes here
 }
 ```
 

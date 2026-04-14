@@ -103,10 +103,10 @@ end
 
 -- For each non-leaf node, assign the id of the last window in the sub-tree to prop.win_id.
 local function fill_win_id(root)
-  if root.prop.row and vim.opt.splitright then
+  if root.prop.row and vim.o.splitright then
     root:reverse_children()
   end
-  if not root.prop.row and vim.opt.splitbelow then
+  if not root.prop.row and vim.o.splitbelow then
     root:reverse_children()
   end
   for _, child in ipairs(root.children) do

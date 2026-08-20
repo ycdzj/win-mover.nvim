@@ -1,3 +1,5 @@
+
+
 # win-mover.nvim
 
 `win-mover.nvim` is a Neovim window mover that ignores side windows.
@@ -72,7 +74,7 @@ use {
 
 This is an example configuration that:
 
-- Binds `<leader>e` for entering Move Mode.
+- Binds `<leader>e` in Normal mode for entering Move Mode.
 - `h,j,k,l` to move window in Move Mode.
 - `q` or `<Esc>` to quit Move Mode.
 - Ignores windows such as `NvimTree`, `neo-tree`, etc.
@@ -113,4 +115,3 @@ vim.keymap.set("n", "<leader>e", win_mover.enter_move_mode, { noremap = true, si
 ## License
 
 MIT License
-
